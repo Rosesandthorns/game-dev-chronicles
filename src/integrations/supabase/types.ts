@@ -26,46 +26,106 @@ export type Database = {
       }
       posts: {
         Row: {
+          author_avatar: string | null
+          author_id: string | null
+          author_name: string
+          author_role: string
+          category: string
+          content: string
           created_at: string
+          date: string
+          excerpt: string
+          featured: boolean
           id: number
+          image: string | null
+          title: string
         }
         Insert: {
+          author_avatar?: string | null
+          author_id?: string | null
+          author_name?: string
+          author_role?: string
+          category?: string
+          content?: string
           created_at?: string
+          date?: string
+          excerpt?: string
+          featured?: boolean
           id?: number
+          image?: string | null
+          title?: string
         }
         Update: {
+          author_avatar?: string | null
+          author_id?: string | null
+          author_name?: string
+          author_role?: string
+          category?: string
+          content?: string
           created_at?: string
+          date?: string
+          excerpt?: string
+          featured?: boolean
           id?: number
+          image?: string | null
+          title?: string
         }
         Relationships: []
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
+          email: string | null
+          full_name: string | null
           id: number
+          role: string | null
+          user_id: string | null
+          username: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
+          email?: string | null
+          full_name?: string | null
           id?: number
+          role?: string | null
+          user_id?: string | null
+          username?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
+          email?: string | null
+          full_name?: string | null
           id?: number
+          role?: string | null
+          user_id?: string | null
+          username?: string | null
         }
         Relationships: []
       }
       subscribers: {
         Row: {
           created_at: string
+          email: string
           id: number
+          name: string | null
+          subscribed_at: string | null
         }
         Insert: {
           created_at?: string
+          email: string
           id?: number
+          name?: string | null
+          subscribed_at?: string | null
         }
         Update: {
           created_at?: string
+          email?: string
           id?: number
+          name?: string | null
+          subscribed_at?: string | null
         }
         Relationships: []
       }

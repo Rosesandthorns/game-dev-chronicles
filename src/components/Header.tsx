@@ -1,85 +1,52 @@
 
-import { useState } from 'react';
+import React from 'react';
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Calendar, BookOpen, MessageSquare } from "lucide-react";
+import { useAuth } from '@/lib/auth';
 
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  
+  const handleSignOut = async () => {
+    await signOut();
+  };
   
   return (
-    <header className="w-full bg-gamedev-bg border-b border-gamedev-primary/20 py-4">
-      <div className="container mx-auto px-4 flex justify-between items-center">
-        <div className="flex items-center">
-          <h1 className="text-2xl font-bold text-gamedev-primary glow-text mr-2">Game Dev Chronicles</h1>
-        </div>
-        
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
-          <a href="#" className="text-gamedev-text hover-glow flex items-center gap-2">
-            <BookOpen size={18} />
-            <span>Updates</span>
-          </a>
-          <a href="#" className="text-gamedev-text hover-glow flex items-center gap-2">
-            <Calendar size={18} />
-            <span>Roadmap</span>
-          </a>
-          <a href="#" className="text-gamedev-text hover-glow flex items-center gap-2">
-            <MessageSquare size={18} />
-            <span>Community</span>
-          </a>
-          <Button variant="outline" className="border-gamedev-primary text-gamedev-primary hover:bg-gamedev-primary/10">
-            Subscribe
-          </Button>
-        </nav>
-        
-        {/* Mobile Menu Button */}
-        <div className="md:hidden">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="text-gamedev-text"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              {isMenuOpen ? (
+    <header className="bg-gamedev-bg border-b border-gamedev-primary/20">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex justify-between items-center">
+          <Link to="/" className="flex items-center space-x-2">
+            <span className="font-bold text-2xl text-gamedev-primary">Mirage Park</span>
+            <span className="hidden sm:inline-block text-gamedev-text">Community Portal</span>
+          </Link>
+          
+          <nav>
+            <ul className="flex items-center space-x-4">
+              <li>
+                <Link to="/" className="text-gamedev-text hover:text-gamedev-primary transition-colors">
+                  Updates
+                </Link>
+              </li>
+              
+              {user ? (
                 <>
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
+                  <li>
+                    <Button variant="ghost" onClick={handleSignOut}>
+                      Sign Out
+                    </Button>
+                  </li>
                 </>
               ) : (
-                <>
-                  <line x1="3" y1="12" x2="21" y2="12" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="3" y1="18" x2="21" y2="18" />
-                </>
+                <li>
+                  <Button asChild>
+                    <Link to="/auth">Sign In</Link>
+                  </Button>
+                </li>
               )}
-            </svg>
-          </Button>
+            </ul>
+          </nav>
         </div>
       </div>
-      
-      {/* Mobile Navigation */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-gamedev-bg border-t border-gamedev-primary/20 py-4 animate-fade-in">
-          <div className="container mx-auto px-4 flex flex-col space-y-4">
-            <a href="#" className="text-gamedev-text hover-glow flex items-center gap-2 p-2">
-              <BookOpen size={18} />
-              <span>Updates</span>
-            </a>
-            <a href="#" className="text-gamedev-text hover-glow flex items-center gap-2 p-2">
-              <Calendar size={18} />
-              <span>Roadmap</span>
-            </a>
-            <a href="#" className="text-gamedev-text hover-glow flex items-center gap-2 p-2">
-              <MessageSquare size={18} />
-              <span>Community</span>
-            </a>
-            <Button variant="outline" className="border-gamedev-primary text-gamedev-primary hover:bg-gamedev-primary/10 w-full">
-              Subscribe
-            </Button>
-          </div>
-        </div>
-      )}
     </header>
   );
 };
