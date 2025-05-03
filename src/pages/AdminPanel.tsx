@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import Layout from '@/components/Layout';
-import { getRecentPosts, deletePost, updatePost } from '@/services/postService';
+import { getRecentPosts, deletePost, updatePost, createPost } from '@/services/postService';
 import { Post, PostCategory, UserRole } from '@/lib/types';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from '@/components/ui/button';

@@ -19,7 +19,7 @@ export async function getPostComments(postId: string): Promise<Comment[]> {
     .from('post_comments')
     .select(`
       *,
-      profiles:user_id (
+      profiles:user_id(
         username,
         avatar_url
       )
@@ -38,21 +38,22 @@ export async function getPostComments(postId: string): Promise<Comment[]> {
       username: comment.profiles.username || 'Anonymous',
       avatar_url: comment.profiles.avatar_url
     } : undefined
-  }));
+  })) as Comment[];
 }
 
 export async function createComment(postId: string, content: string): Promise<{ success: boolean; error?: any; data?: Comment }> {
-  const user = supabase.auth.getUser();
-  if (!user) {
+  const user = await supabase.auth.getUser();
+  if (!user.data.user) {
     return { success: false, error: 'User not authenticated' };
   }
   
   const { data, error } = await supabase
     .from('post_comments')
-    .insert([{
+    .insert({
       post_id: postId,
-      content
-    }])
+      content,
+      user_id: user.data.user.id
+    })
     .select()
     .single();
   
@@ -60,7 +61,7 @@ export async function createComment(postId: string, content: string): Promise<{ 
     return { success: false, error };
   }
   
-  return { success: true, data: data as Comment };
+  return { success: true, data: data as unknown as Comment };
 }
 
 export async function updateComment(id: string, content: string): Promise<{ success: boolean; error?: any }> {
