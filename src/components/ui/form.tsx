@@ -51,7 +51,7 @@ const useFormField = () => {
     throw new Error("useFormField should be used within <FormField>")
   }
   
-  // Return a safe version when used outside a form context
+  // Return a safe default object when used outside a form context to prevent null errors
   if (!formContext) {
     return {
       id: itemContext?.id || "",
@@ -63,6 +63,23 @@ const useFormField = () => {
       isDirty: false,
       isTouched: false,
       error: undefined,
+      getFieldState: () => ({
+        invalid: false,
+        isDirty: false,
+        isTouched: false,
+        error: undefined
+      }),
+      formState: {
+        errors: {},
+        isDirty: false,
+        dirtyFields: {},
+        touchedFields: {},
+        isSubmitting: false,
+        isSubmitted: false,
+        isSubmitSuccessful: false,
+        isValid: false,
+        isValidating: false,
+      }
     }
   }
   
@@ -79,6 +96,8 @@ const useFormField = () => {
     formDescriptionId: `${id}-form-item-description`,
     formMessageId: `${id}-form-item-message`,
     ...fieldState,
+    getFieldState,
+    formState,
   }
 }
 

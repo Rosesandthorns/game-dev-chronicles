@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 type AuthMode = "signin" | "signup";
 
@@ -15,6 +16,7 @@ const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const { toast: uiToast } = useToast();
@@ -42,9 +44,28 @@ const Auth = () => {
         });
         navigate("/");
       } else {
+        // For signup, ensure username is provided
+        if (!username.trim()) {
+          throw new Error("Username is required");
+        }
+        
+        // Sign up with email and password
         const { error, data } = await signUp(email, password);
         if (error) {
           throw error;
+        }
+        
+        // If user was created successfully, update their profile with the username
+        if (data.user) {
+          // Update the profile with the username
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ username })
+            .eq('user_id', data.user.id);
+          
+          if (profileError) {
+            console.error("Failed to set username:", profileError);
+          }
         }
         
         if (data.user && !data.session) {
@@ -53,7 +74,7 @@ const Auth = () => {
           });
         } else {
           toast.success("Account created", {
-            description: "Welcome to Mirage Park Community Portal!"
+            description: `Welcome to Mirage Park Community Portal, ${username}!`
           });
           navigate("/");
         }
@@ -99,6 +120,24 @@ const Auth = () => {
                 disabled={loading}
               />
             </div>
+            
+            {mode === "signup" && (
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Choose a username"
+                  required
+                  disabled={loading}
+                  minLength={3}
+                  maxLength={30}
+                />
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
