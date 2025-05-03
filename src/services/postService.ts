@@ -47,10 +47,19 @@ export async function getPostsByCategory(category: PostCategory): Promise<Post[]
 }
 
 export async function getPostById(id: string): Promise<Post | null> {
+  // Convert id to number for database compatibility
+  const numericId = parseInt(id, 10);
+  
+  // Validate if conversion was successful
+  if (isNaN(numericId)) {
+    console.error(`Invalid post ID format: ${id}`);
+    return null;
+  }
+  
   const { data, error } = await supabase
     .from('posts')
     .select('*')
-    .eq('id', id)
+    .eq('id', numericId)
     .single();
   
   if (error) {
@@ -62,6 +71,10 @@ export async function getPostById(id: string): Promise<Post | null> {
 }
 
 export async function createPost(post: Omit<Post, 'id' | 'date'>): Promise<{ success: boolean; error?: any; data?: any }> {
+  if (!post || !post.title || !post.content) {
+    return { success: false, error: "Post must include title and content" };
+  }
+  
   const { data, error } = await supabase
     .from('posts')
     .insert([{
@@ -88,6 +101,14 @@ export async function createPost(post: Omit<Post, 'id' | 'date'>): Promise<{ suc
 }
 
 export async function updatePost(id: string, post: Partial<Post>): Promise<{ success: boolean; error?: any }> {
+  // Convert id to number for database compatibility
+  const numericId = parseInt(id, 10);
+  
+  // Validate if conversion was successful
+  if (isNaN(numericId)) {
+    return { success: false, error: 'Invalid post ID format' };
+  }
+  
   const updateData: any = {};
   
   if (post.title) updateData.title = post.title;
@@ -108,7 +129,7 @@ export async function updatePost(id: string, post: Partial<Post>): Promise<{ suc
   const { error } = await supabase
     .from('posts')
     .update(updateData)
-    .eq('id', id);
+    .eq('id', numericId);
   
   if (error) {
     return { success: false, error };
@@ -118,10 +139,18 @@ export async function updatePost(id: string, post: Partial<Post>): Promise<{ suc
 }
 
 export async function deletePost(id: string): Promise<{ success: boolean; error?: any }> {
+  // Convert id to number for database compatibility
+  const numericId = parseInt(id, 10);
+  
+  // Validate if conversion was successful
+  if (isNaN(numericId)) {
+    return { success: false, error: 'Invalid post ID format' };
+  }
+  
   const { error } = await supabase
     .from('posts')
     .delete()
-    .eq('id', id);
+    .eq('id', numericId);
   
   if (error) {
     return { success: false, error };

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface Comment {
   id: string;
-  post_id: string;
+  post_id: string; // Changed from string to match database
   user_id: string;
   content: string;
   created_at: string;
@@ -15,6 +15,15 @@ export interface Comment {
 }
 
 export async function getPostComments(postId: string): Promise<Comment[]> {
+  // Convert postId to number if needed for database query
+  const numericPostId = parseInt(postId, 10);
+  
+  // Validate if conversion was successful
+  if (isNaN(numericPostId)) {
+    console.error('Invalid post ID format:', postId);
+    return [];
+  }
+  
   const { data, error } = await supabase
     .from('post_comments')
     .select(`
@@ -24,11 +33,15 @@ export async function getPostComments(postId: string): Promise<Comment[]> {
         avatar_url
       )
     `)
-    .eq('post_id', postId)
+    .eq('post_id', numericPostId)
     .order('created_at', { ascending: true });
   
   if (error) {
     console.error('Error fetching post comments:', error);
+    return [];
+  }
+  
+  if (!data || data.length === 0) {
     return [];
   }
   
@@ -39,7 +52,7 @@ export async function getPostComments(postId: string): Promise<Comment[]> {
     
     return {
       id: comment.id,
-      post_id: comment.post_id,
+      post_id: String(comment.post_id), // Convert number to string to match our interface
       user_id: comment.user_id,
       content: comment.content,
       created_at: comment.created_at,
@@ -60,11 +73,18 @@ export async function createComment(postId: string, content: string): Promise<{ 
     return { success: false, error: 'User not authenticated' };
   }
   
-  // Convert postId to the correct type if necessary for database compatibility
+  // Convert postId to number for database compatibility
+  const numericPostId = parseInt(postId, 10);
+  
+  // Validate if conversion was successful
+  if (isNaN(numericPostId)) {
+    return { success: false, error: 'Invalid post ID format' };
+  }
+  
   const { data, error } = await supabase
     .from('post_comments')
     .insert({
-      post_id: postId,
+      post_id: numericPostId,
       content,
       user_id: user.data.user.id
     })
@@ -75,11 +95,15 @@ export async function createComment(postId: string, content: string): Promise<{ 
     return { success: false, error };
   }
   
+  if (!data) {
+    return { success: false, error: 'Failed to create comment' };
+  }
+  
   return { 
     success: true, 
     data: {
       id: data.id,
-      post_id: data.post_id,
+      post_id: String(data.post_id), // Convert to string to match our interface
       user_id: data.user_id,
       content: data.content,
       created_at: data.created_at,
@@ -89,6 +113,10 @@ export async function createComment(postId: string, content: string): Promise<{ 
 }
 
 export async function updateComment(id: string, content: string): Promise<{ success: boolean; error?: any }> {
+  if (!id || typeof content !== 'string') {
+    return { success: false, error: 'Invalid parameters for comment update' };
+  }
+
   const { error } = await supabase
     .from('post_comments')
     .update({ 
@@ -105,6 +133,10 @@ export async function updateComment(id: string, content: string): Promise<{ succ
 }
 
 export async function deleteComment(id: string): Promise<{ success: boolean; error?: any }> {
+  if (!id) {
+    return { success: false, error: 'Invalid comment ID' };
+  }
+
   const { error } = await supabase
     .from('post_comments')
     .delete()
