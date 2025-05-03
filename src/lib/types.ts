@@ -1,5 +1,6 @@
 
 export type PostCategory = 'gameplay' | 'art' | 'technical' | 'announcement';
+export type UserRole = 'user' | 'admin' | 'patreon_basic' | 'patreon_premium';
 
 export interface Post {
   id: string;
@@ -15,4 +16,6 @@ export interface Post {
   category: PostCategory;
   image?: string;
   featured: boolean;
+  access_level?: UserRole;
+  publish_at?: string | null;
 }

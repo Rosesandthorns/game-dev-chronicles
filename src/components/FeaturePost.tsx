@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Post } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import CategoryTag from './CategoryTag';
@@ -31,6 +32,17 @@ const FeaturePost: React.FC<FeaturePostProps> = ({ post }) => {
           <div className="flex items-center gap-3 mb-3">
             <CategoryTag category={post.category} />
             <span className="text-xs text-gamedev-muted">{formattedDate}</span>
+            {post.access_level && post.access_level !== 'user' && (
+              <span className={`text-xs font-medium px-2 py-0.5 rounded ${
+                post.access_level === 'admin' 
+                  ? 'bg-red-100 text-red-800' 
+                  : post.access_level === 'patreon_premium'
+                  ? 'bg-purple-100 text-purple-800'
+                  : 'bg-blue-100 text-blue-800'
+              }`}>
+                {post.access_level.replace('_', ' ')}
+              </span>
+            )}
           </div>
           <h2 className="text-2xl md:text-3xl font-bold mb-3 text-gamedev-primary glow-text">
             {post.title}
@@ -51,8 +63,8 @@ const FeaturePost: React.FC<FeaturePostProps> = ({ post }) => {
             </div>
           </div>
           
-          <Button className="bg-gamedev-primary hover:bg-gamedev-primary/80 text-white">
-            Read Full Update
+          <Button asChild className="bg-gamedev-primary hover:bg-gamedev-primary/80 text-white">
+            <Link to={`/post/${post.id}`}>Read Full Update</Link>
           </Button>
         </div>
       </CardContent>

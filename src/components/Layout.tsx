@@ -1,7 +1,9 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import Header from './Header';
+import { toast } from '@/components/ui/sonner';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -10,6 +12,16 @@ type LayoutProps = {
 
 const Layout: React.FC<LayoutProps> = ({ children, requireAuth = false }) => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && requireAuth && !user) {
+      toast.error("Authentication required", {
+        description: "Please sign in to access this page."
+      });
+      navigate('/auth');
+    }
+  }, [loading, requireAuth, user, navigate]);
 
   if (loading) {
     return (
@@ -25,8 +37,7 @@ const Layout: React.FC<LayoutProps> = ({ children, requireAuth = false }) => {
   }
 
   if (requireAuth && !user) {
-    window.location.href = '/auth';
-    return null;
+    return null; // Redirect handled in useEffect
   }
 
   return (

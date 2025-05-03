@@ -24,8 +24,44 @@ export type Database = {
         }
         Relationships: []
       }
+      post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
+          access_level: Database["public"]["Enums"]["user_role"]
           author_avatar: string | null
           author_id: string | null
           author_name: string
@@ -38,9 +74,11 @@ export type Database = {
           featured: boolean
           id: number
           image: string | null
+          publish_at: string | null
           title: string
         }
         Insert: {
+          access_level?: Database["public"]["Enums"]["user_role"]
           author_avatar?: string | null
           author_id?: string | null
           author_name?: string
@@ -53,9 +91,11 @@ export type Database = {
           featured?: boolean
           id?: number
           image?: string | null
+          publish_at?: string | null
           title?: string
         }
         Update: {
+          access_level?: Database["public"]["Enums"]["user_role"]
           author_avatar?: string | null
           author_id?: string | null
           author_name?: string
@@ -68,6 +108,7 @@ export type Database = {
           featured?: boolean
           id?: number
           image?: string | null
+          publish_at?: string | null
           title?: string
         }
         Relationships: []
@@ -134,10 +175,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      publish_scheduled_posts: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "user" | "admin" | "patreon_basic" | "patreon_premium"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -252,6 +300,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["user", "admin", "patreon_basic", "patreon_premium"],
+    },
   },
 } as const

@@ -1,11 +1,38 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/lib/auth';
+import { supabase } from "@/integrations/supabase/client";
 
 const Header = () => {
   const { user, signOut } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  useEffect(() => {
+    async function checkUserRole() {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+      
+      try {
+        // Check if user has admin role
+        const { data } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+        
+        setIsAdmin(data?.role === 'admin');
+      } catch (error) {
+        console.error("Error checking user role:", error);
+        setIsAdmin(false);
+      }
+    }
+    
+    checkUserRole();
+  }, [user]);
   
   const handleSignOut = async () => {
     await signOut();
@@ -27,6 +54,14 @@ const Header = () => {
                   Updates
                 </Link>
               </li>
+              
+              {isAdmin && (
+                <li>
+                  <Link to="/admin" className="text-gamedev-text hover:text-gamedev-primary transition-colors">
+                    Admin Panel
+                  </Link>
+                </li>
+              )}
               
               {user ? (
                 <>

@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import CategoryTag from './CategoryTag';
 import { Post } from '@/lib/types';
@@ -15,22 +16,24 @@ const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
   return (
     <Card className="game-card overflow-hidden">
       {post.image && (
-        <div className="w-full h-48 overflow-hidden">
+        <Link to={`/post/${post.id}`} className="w-full h-48 overflow-hidden block">
           <img 
             src={post.image} 
             alt={post.title} 
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
           />
-        </div>
+        </Link>
       )}
       <CardHeader className="flex flex-col gap-2">
         <div className="flex justify-between items-start">
           <CategoryTag category={post.category} />
           <span className="text-xs text-gamedev-muted">{formattedDate}</span>
         </div>
-        <h3 className="text-xl font-bold hover:text-gamedev-primary transition-colors cursor-pointer">
-          {post.title}
-        </h3>
+        <Link to={`/post/${post.id}`}>
+          <h3 className="text-xl font-bold hover:text-gamedev-primary transition-colors cursor-pointer">
+            {post.title}
+          </h3>
+        </Link>
       </CardHeader>
       <CardContent>
         <p className="text-gamedev-text/80">{post.excerpt}</p>
@@ -47,9 +50,9 @@ const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
             <span className="text-xs text-gamedev-muted">{post.author.role}</span>
           </div>
         </div>
-        <button className="text-sm text-gamedev-primary hover:text-gamedev-accent transition-colors">
+        <Link to={`/post/${post.id}`} className="text-sm text-gamedev-primary hover:text-gamedev-accent transition-colors">
           Read More
-        </button>
+        </Link>
       </CardFooter>
     </Card>
   );
