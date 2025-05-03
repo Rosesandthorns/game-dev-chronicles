@@ -32,13 +32,14 @@ export async function getPostComments(postId: string): Promise<Comment[]> {
     return [];
   }
   
+  // Transform and type cast the data
   return data.map(comment => ({
     ...comment,
     author: comment.profiles ? {
       username: comment.profiles.username || 'Anonymous',
       avatar_url: comment.profiles.avatar_url
     } : undefined
-  })) as Comment[];
+  })) as unknown as Comment[];
 }
 
 export async function createComment(postId: string, content: string): Promise<{ success: boolean; error?: any; data?: Comment }> {
@@ -47,6 +48,7 @@ export async function createComment(postId: string, content: string): Promise<{ 
     return { success: false, error: 'User not authenticated' };
   }
   
+  // Parse postId to number for database compatibility
   const { data, error } = await supabase
     .from('post_comments')
     .insert({

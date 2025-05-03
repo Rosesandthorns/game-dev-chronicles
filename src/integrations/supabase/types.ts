@@ -120,6 +120,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: number
+          is_admin: boolean
           role: string | null
           user_id: string | null
           username: string | null
@@ -130,6 +131,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: number
+          is_admin?: boolean
           role?: string | null
           user_id?: string | null
           username?: string | null
@@ -140,6 +142,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: number
+          is_admin?: boolean
           role?: string | null
           user_id?: string | null
           username?: string | null
