@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
@@ -331,137 +332,99 @@ const AdminPanel = () => {
                 {editingPost ? 'Edit Post' : 'Create New Post'}
               </h2>
               
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Post title" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Title</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
+                            <Input placeholder="Post title" {...field} />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="gameplay">Gameplay</SelectItem>
-                            <SelectItem value="art">Art</SelectItem>
-                            <SelectItem value="technical">Technical</SelectItem>
-                            <SelectItem value="announcement">Announcement</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="image"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Image URL (Optional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://example.com/image.jpg" {...field} value={field.value || ''} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="access_level"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Access Level</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Category</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select category" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="gameplay">Gameplay</SelectItem>
+                              <SelectItem value="art">Art</SelectItem>
+                              <SelectItem value="technical">Technical</SelectItem>
+                              <SelectItem value="announcement">Announcement</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="image"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Image URL (Optional)</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select access level" />
-                            </SelectTrigger>
+                            <Input placeholder="https://example.com/image.jpg" {...field} value={field.value || ''} />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="user">Everyone</SelectItem>
-                            <SelectItem value="patreon_basic">Patreon Basic</SelectItem>
-                            <SelectItem value="patreon_premium">Patreon Premium</SelectItem>
-                            <SelectItem value="admin">Admin Only</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="excerpt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Excerpt</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Brief summary of the post" 
-                          className="h-20"
-                          {...field} 
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="content"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Content</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Full post content" 
-                          className="h-64"
-                          {...field} 
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="access_level"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Access Level</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select access level" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="user">Everyone</SelectItem>
+                              <SelectItem value="patreon_basic">Patreon Basic</SelectItem>
+                              <SelectItem value="patreon_premium">Patreon Premium</SelectItem>
+                              <SelectItem value="admin">Admin Only</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
                   <FormField
                     control={form.control}
-                    name="featured"
+                    name="excerpt"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">Featured Post</FormLabel>
-                          <p className="text-sm text-muted-foreground">
-                            Display this post prominently on the homepage
-                          </p>
-                        </div>
+                      <FormItem>
+                        <FormLabel>Excerpt</FormLabel>
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
+                          <Textarea 
+                            placeholder="Brief summary of the post" 
+                            className="h-20"
+                            {...field} 
                           />
                         </FormControl>
                       </FormItem>
@@ -470,66 +433,106 @@ const AdminPanel = () => {
                   
                   <FormField
                     control={form.control}
-                    name="publish_at"
+                    name="content"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Schedule Publication (Optional)</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={
-                                  !field.value ? "text-muted-foreground" : ""
-                                }
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  "Pick a date"
-                                )}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value || undefined}
-                              onSelect={(date) => field.onChange(date)}
-                              disabled={(date) => date < new Date()}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        {field.value && (
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            className="mt-2"
-                            onClick={() => field.onChange(null)}
-                          >
-                            Clear Date
-                          </Button>
-                        )}
+                      <FormItem>
+                        <FormLabel>Content</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Full post content" 
+                            className="h-64"
+                            {...field} 
+                          />
+                        </FormControl>
                       </FormItem>
                     )}
                   />
-                </div>
-                
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    onClick={() => setActiveTab('posts')}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit">
-                    {editingPost ? 'Update Post' : 'Create Post'}
-                  </Button>
-                </div>
-              </form>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="featured"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Featured Post</FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                              Display this post prominently on the homepage
+                            </p>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="publish_at"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Schedule Publication (Optional)</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={
+                                    !field.value ? "text-muted-foreground" : ""
+                                  }
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {field.value ? (
+                                    format(field.value, "PPP")
+                                  ) : (
+                                    "Pick a date"
+                                  )}
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value || undefined}
+                                onSelect={(date) => field.onChange(date)}
+                                disabled={(date) => date < new Date()}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          {field.value && (
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              className="mt-2"
+                              onClick={() => field.onChange(null)}
+                            >
+                              Clear Date
+                            </Button>
+                          )}
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end gap-3 pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => setActiveTab('posts')}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit">
+                      {editingPost ? 'Update Post' : 'Create Post'}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
             </div>
           </TabsContent>
         </Tabs>
