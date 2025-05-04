@@ -4,6 +4,14 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/lib/auth';
 import { supabase } from "@/integrations/supabase/client";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { UserIcon } from "lucide-react";
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -76,13 +84,28 @@ const Header = () => {
               )}
               
               {user ? (
-                <>
-                  <li>
-                    <Button variant="ghost" onClick={handleSignOut}>
-                      Sign Out
-                    </Button>
-                  </li>
-                </>
+                <li>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <UserIcon className="h-5 w-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <div className="px-2 py-1.5 text-sm">
+                        {user.email}
+                      </div>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/profile">My Profile</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut}>
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </li>
               ) : (
                 <li>
                   <Button asChild>
