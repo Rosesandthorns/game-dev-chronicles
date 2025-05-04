@@ -241,51 +241,51 @@ const AdminPanel = () => {
           </TabsList>
           
           <TabsContent value="posts">
-            <div className="bg-white rounded-md shadow">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Access Level</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-36">Actions</TableHead>
+            <div className="bg-black rounded-md shadow border border-gray-800">
+              <Table dark>
+                <TableHeader dark>
+                  <TableRow dark>
+                    <TableHead dark>Title</TableHead>
+                    <TableHead dark>Category</TableHead>
+                    <TableHead dark>Access Level</TableHead>
+                    <TableHead dark>Status</TableHead>
+                    <TableHead dark className="w-36">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
+                <TableBody dark>
                   {posts.map(post => (
-                    <TableRow key={post.id}>
-                      <TableCell className="font-medium">
+                    <TableRow dark key={post.id}>
+                      <TableCell dark className="font-medium">
                         <div className="truncate max-w-[300px]" title={post.title}>
                           {post.title}
                         </div>
                       </TableCell>
-                      <TableCell>{post.category}</TableCell>
-                      <TableCell>
+                      <TableCell dark>{post.category}</TableCell>
+                      <TableCell dark>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           post.access_level === 'admin' 
-                            ? 'bg-red-100 text-red-800' 
+                            ? 'bg-red-800 text-red-100' 
                             : post.access_level === 'patreon_premium'
-                            ? 'bg-purple-100 text-purple-800'
+                            ? 'bg-purple-800 text-purple-100'
                             : post.access_level === 'patreon_basic'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-green-100 text-green-800'
+                            ? 'bg-blue-800 text-blue-100'
+                            : 'bg-green-800 text-green-100'
                         }`}>
                           {post.access_level || 'user'}
                         </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell dark>
                         {post.publish_at && new Date(post.publish_at) > new Date() ? (
-                          <span className="text-orange-500">
+                          <span className="text-amber-400">
                             Scheduled: {new Date(post.publish_at).toLocaleDateString()}
                           </span>
                         ) : (
-                          <span className={post.featured ? "text-emerald-600" : "text-slate-600"}>
+                          <span className={post.featured ? "text-emerald-400" : "text-gray-400"}>
                             {post.featured ? "Featured" : "Published"}
                           </span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell dark>
                         <div className="flex space-x-2">
                           <Button
                             variant="ghost"
@@ -304,7 +304,7 @@ const AdminPanel = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-red-600"
+                            className="text-red-500 hover:text-red-400"
                             onClick={() => handleDelete(post.id)}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -315,8 +315,8 @@ const AdminPanel = () => {
                   ))}
                   
                   {posts.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8">
+                    <TableRow dark>
+                      <TableCell dark colSpan={5} className="text-center py-8">
                         No posts found. Create a new one to get started.
                       </TableCell>
                     </TableRow>
@@ -327,8 +327,8 @@ const AdminPanel = () => {
           </TabsContent>
           
           <TabsContent value="editor">
-            <div className="bg-white rounded-md shadow p-6">
-              <h2 className="text-xl font-bold mb-6">
+            <div className="bg-black rounded-md shadow p-6 border border-gray-800">
+              <h2 className="text-xl font-bold mb-6 text-white">
                 {editingPost ? 'Edit Post' : 'Create New Post'}
               </h2>
               
@@ -340,7 +340,7 @@ const AdminPanel = () => {
                       name="title"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Title</FormLabel>
+                          <FormLabel className="text-white">Title</FormLabel>
                           <FormControl>
                             <Input placeholder="Post title" {...field} />
                           </FormControl>
@@ -353,7 +353,7 @@ const AdminPanel = () => {
                       name="category"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Category</FormLabel>
+                          <FormLabel className="text-white">Category</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
@@ -379,7 +379,7 @@ const AdminPanel = () => {
                       name="image"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Image URL (Optional)</FormLabel>
+                          <FormLabel className="text-white">Image URL (Optional)</FormLabel>
                           <FormControl>
                             <Input placeholder="https://example.com/image.jpg" {...field} value={field.value || ''} />
                           </FormControl>
@@ -392,7 +392,7 @@ const AdminPanel = () => {
                       name="access_level"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Access Level</FormLabel>
+                          <FormLabel className="text-white">Access Level</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
@@ -419,7 +419,7 @@ const AdminPanel = () => {
                     name="excerpt"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Excerpt</FormLabel>
+                        <FormLabel className="text-white">Excerpt</FormLabel>
                         <FormControl>
                           <Textarea 
                             placeholder="Brief summary of the post" 
@@ -436,7 +436,7 @@ const AdminPanel = () => {
                     name="content"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Content</FormLabel>
+                        <FormLabel className="text-white">Content</FormLabel>
                         <FormControl>
                           <Textarea 
                             placeholder="Full post content" 
@@ -453,10 +453,10 @@ const AdminPanel = () => {
                       control={form.control}
                       name="featured"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border border-gray-700 p-4">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base">Featured Post</FormLabel>
-                            <p className="text-sm text-muted-foreground">
+                            <FormLabel className="text-base text-white">Featured Post</FormLabel>
+                            <p className="text-sm text-gray-400">
                               Display this post prominently on the homepage
                             </p>
                           </div>
@@ -475,7 +475,7 @@ const AdminPanel = () => {
                       name="publish_at"
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
-                          <FormLabel>Schedule Publication (Optional)</FormLabel>
+                          <FormLabel className="text-white">Schedule Publication (Optional)</FormLabel>
                           <Popover>
                             <PopoverTrigger asChild>
                               <FormControl>

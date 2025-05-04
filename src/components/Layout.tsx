@@ -49,7 +49,7 @@ const Layout: React.FC<LayoutProps> = ({ children, requireAuth = false }) => {
       <footer className="bg-gamedev-bg border-t border-gamedev-primary/20 py-6">
         <div className="container mx-auto px-4 text-center">
           <p className="text-gamedev-muted">
-            © 2025 Mirage Park Community Portal. All development updates and assets belong to their respective owners.
+            © 2025 Mirage Park Community Portal. All rights reserved.
           </p>
         </div>
       </footer>

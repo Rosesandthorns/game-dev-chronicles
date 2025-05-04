@@ -25,31 +25,51 @@ export async function getPostComments(postId: string): Promise<Comment[]> {
       return [];
     }
     
-    const { data, error } = await supabase
+    // First get all comments for this post
+    const { data: comments, error: commentsError } = await supabase
       .from('post_comments')
-      .select(`
-        *,
-        profiles:user_id(
-          username,
-          avatar_url
-        )
-      `)
+      .select('*')
       .eq('post_id', numericPostId)
       .order('created_at', { ascending: true });
     
-    if (error) {
-      console.error('Error fetching post comments:', error);
+    if (commentsError) {
+      console.error('Error fetching post comments:', commentsError);
       return [];
     }
     
-    if (!data || data.length === 0) {
+    if (!comments || comments.length === 0) {
       return [];
+    }
+    
+    // Then get user profiles for these comments
+    const userIds = comments.map(comment => comment.user_id);
+    
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('user_id, username, avatar_url')
+      .in('user_id', userIds);
+    
+    if (profilesError) {
+      console.error('Error fetching user profiles:', profilesError);
+    }
+    
+    // Create a map of user profiles for quick lookup
+    const profileMap = new Map();
+    if (profiles && profiles.length > 0) {
+      profiles.forEach(profile => {
+        profileMap.set(profile.user_id, {
+          username: profile.username || 'Anonymous',
+          avatar_url: profile.avatar_url
+        });
+      });
     }
     
     // Transform and properly type the data
-    const comments = data.map(comment => {
-      // Extract the profiles data safely
-      const profileData = comment.profiles as any;
+    const formattedComments = comments.map(comment => {
+      const authorData = profileMap.get(comment.user_id) || {
+        username: 'Anonymous',
+        avatar_url: null
+      };
       
       return {
         id: comment.id,
@@ -58,14 +78,11 @@ export async function getPostComments(postId: string): Promise<Comment[]> {
         content: comment.content,
         created_at: comment.created_at,
         updated_at: comment.updated_at,
-        author: profileData ? {
-          username: profileData.username || 'Anonymous',
-          avatar_url: profileData.avatar_url
-        } : undefined
+        author: authorData
       };
     });
     
-    return comments as Comment[];
+    return formattedComments as Comment[];
   } catch (error) {
     console.error('Unexpected error in getPostComments:', error);
     return [];
@@ -74,9 +91,16 @@ export async function getPostComments(postId: string): Promise<Comment[]> {
 
 export async function createComment(postId: string, content: string): Promise<{ success: boolean; error?: any; data?: Comment }> {
   try {
-    const user = await supabase.auth.getUser();
-    if (!user.data.user) {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData.user) {
       return { success: false, error: 'User not authenticated' };
+    }
+
+    const user = userData.user;
+    
+    // Validate content
+    if (!content || content.trim() === '') {
+      return { success: false, error: 'Comment cannot be empty' };
     }
     
     // Convert postId to number for database compatibility
@@ -101,15 +125,27 @@ export async function createComment(postId: string, content: string): Promise<{ 
       };
     }
     
+    // Get user profile information
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('username, avatar_url')
+      .eq('user_id', user.id)
+      .single();
+      
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+      // Continue anyway, we'll use default values
+    }
+    
     // Insert the comment
     const { data, error } = await supabase
       .from('post_comments')
       .insert({
         post_id: numericPostId,
-        content,
-        user_id: user.data.user.id
+        user_id: user.id,
+        content: content.trim()
       })
-      .select('*, profiles:user_id(username, avatar_url)')
+      .select()
       .single();
     
     if (error) {
@@ -121,9 +157,6 @@ export async function createComment(postId: string, content: string): Promise<{ 
       return { success: false, error: 'Failed to create comment' };
     }
     
-    // Extract the profiles data safely
-    const profileData = data.profiles as any;
-    
     // Transform the data to match our interface
     const commentData: Comment = {
       id: data.id,
@@ -132,10 +165,10 @@ export async function createComment(postId: string, content: string): Promise<{ 
       content: data.content,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      author: profileData ? {
-        username: profileData.username || 'Anonymous',
-        avatar_url: profileData.avatar_url
-      } : undefined
+      author: {
+        username: profileData?.username || user.email?.split('@')[0] || 'Anonymous',
+        avatar_url: profileData?.avatar_url
+      }
     };
     
     return { 
