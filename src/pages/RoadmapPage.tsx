@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/lib/auth';
@@ -112,7 +111,10 @@ const RoadmapPage = () => {
   };
   
   const handleUpdateFunding = async () => {
-    if (!isAdmin) return;
+    if (!isAdmin) {
+      toast.error("Only administrators can update funding amounts");
+      return;
+    }
     
     const amount = parseFloat(editAmount);
     if (isNaN(amount) || amount < 0) {
@@ -121,14 +123,14 @@ const RoadmapPage = () => {
     }
     
     try {
-      const { success } = await updateFundingAmount(amount);
+      const { success, error } = await updateFundingAmount(amount);
       
       if (success) {
         setCurrentFunding(amount);
         setEditMode(false);
         toast.success("Funding amount updated successfully");
       } else {
-        toast.error("Failed to update funding amount");
+        toast.error(error || "Failed to update funding amount");
       }
     } catch (error) {
       console.error("Error updating funding:", error);
@@ -155,7 +157,7 @@ const RoadmapPage = () => {
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-xl font-semibold text-white">Development Progress</h2>
             <div className="text-right">
-              {editMode ? (
+              {editMode && isAdmin ? (
                 <div className="flex items-center gap-2">
                   <Input
                     type="number"
