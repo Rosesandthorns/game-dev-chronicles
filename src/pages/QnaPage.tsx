@@ -76,7 +76,6 @@ const QnaPage = () => {
         .select(`
           id,
           user_id,
-          profiles(username),
           question,
           answer,
           created_at,
@@ -88,15 +87,25 @@ const QnaPage = () => {
       
       if (error) throw error;
       
-      const formattedData = data.map(item => ({
-        id: item.id,
-        user_id: item.user_id,
-        username: item.profiles?.username || 'Anonymous',
-        question: item.question,
-        answer: item.answer,
-        created_at: item.created_at,
-        answered_at: item.answered_at,
-        user_tier: item.user_tier
+      // Get the usernames separately since we can't directly join with profiles
+      const formattedData = await Promise.all(data.map(async (item) => {
+        // Get username from profiles
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('user_id', item.user_id)
+          .single();
+          
+        return {
+          id: item.id,
+          user_id: item.user_id,
+          username: profileData?.username || 'Anonymous',
+          question: item.question,
+          answer: item.answer,
+          created_at: item.created_at,
+          answered_at: item.answered_at,
+          user_tier: item.user_tier
+        };
       }));
       
       setQuestions(formattedData);
