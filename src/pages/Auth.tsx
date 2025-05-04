@@ -1,200 +1,245 @@
 
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "@/lib/auth";
-import { useToast } from "@/hooks/use-toast";
-import { toast } from "@/components/ui/sonner";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/auth';
+import Layout from '@/components/Layout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from '@/components/ui/sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
-type AuthMode = "signin" | "signup";
+const loginSchema = z.object({
+  email: z.string().email({ message: "Must be a valid email" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+});
+
+const registerSchema = z.object({
+  username: z.string().min(3, { message: "Username must be at least 3 characters" }),
+  email: z.string().email({ message: "Must be a valid email" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
 
 const Auth = () => {
-  const [mode, setMode] = useState<AuthMode>("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
-  const { toast: uiToast } = useToast();
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      navigate("/");
-    }
-  }, [user, navigate]);
+  const loginForm = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const registerForm = useForm<z.infer<typeof registerSchema>>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
 
+  const onLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
+    setIsLoading(true);
     try {
-      if (mode === "signin") {
-        const { error } = await signIn(email, password);
-        if (error) {
-          throw error;
-        }
-        toast.success("Sign in successful", {
-          description: "Welcome back to Mirage Park Community Portal!"
-        });
-        navigate("/");
-      } else {
-        // For signup, ensure username is provided
-        if (!username.trim()) {
-          throw new Error("Username is required");
-        }
-        
-        // Sign up with email and password
-        const { error, data } = await signUp(email, password);
-        if (error) {
-          throw error;
-        }
-        
-        // If user was created successfully, update their profile with the username
-        if (data.user) {
-          // Update the profile with the username
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({ username })
-            .eq('user_id', data.user.id);
-          
-          if (profileError) {
-            console.error("Failed to set username:", profileError);
-          }
-        }
-        
-        if (data.user && !data.session) {
-          toast.success("Account created", {
-            description: "Check your email to confirm your account."
-          });
-        } else {
-          toast.success("Account created", {
-            description: `Welcome to Mirage Park Community Portal, ${username}!`
-          });
-          navigate("/");
-        }
-      }
-    } catch (error: any) {
-      // Improved error handling with more user-friendly messages
-      const errorMessage = error.message || "An error occurred during authentication";
+      const { error } = await signIn(data.email, data.password);
+      if (error) throw error;
       
-      toast.error("Authentication error", {
-        description: errorMessage
+      toast.success('Welcome back!', {
+        description: 'You have successfully signed in.',
       });
       
-      console.error("Auth error:", error);
+      navigate('/');
+    } catch (error: any) {
+      toast.error('Sign in failed', {
+        description: error.message,
+      });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
+    }
+  };
+
+  const onRegisterSubmit = async (data: z.infer<typeof registerSchema>) => {
+    setIsLoading(true);
+    try {
+      const { error } = await signUp(data.email, data.password, data.username);
+      if (error) throw error;
+      
+      toast.success('Registration successful!', {
+        description: 'Your account has been created. You can now sign in.',
+      });
+      
+      setActiveTab('login');
+      registerForm.reset();
+    } catch (error: any) {
+      toast.error('Registration failed', {
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gamedev-bg px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">
-            {mode === "signin" ? "Sign In" : "Create an Account"}
-          </CardTitle>
-          <CardDescription className="text-center">
-            {mode === "signin"
-              ? "Sign in to access Mirage Park Community Portal"
-              : "Join the Mirage Park community"}
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleAuth}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your.email@example.com"
-                required
-                disabled={loading}
-              />
+    <Layout>
+      <div className="flex items-center justify-center min-h-[70vh]">
+        <Card className="w-full max-w-md bg-black border-gamedev-primary/20 text-white">
+          <CardHeader>
+            <CardTitle className="text-2xl text-gamedev-primary text-center">
+              {activeTab === 'login' ? 'Sign In' : 'Create Account'}
+            </CardTitle>
+            <CardDescription className="text-center text-gamedev-muted">
+              {activeTab === 'login' 
+                ? 'Access your Mirage Park community account' 
+                : 'Join the Mirage Park community'}
+            </CardDescription>
+          </CardHeader>
+          
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'login' | 'register')}>
+            <div className="px-6">
+              <TabsList className="grid grid-cols-2 mb-6 w-full bg-gamedev-bg">
+                <TabsTrigger value="login">Sign In</TabsTrigger>
+                <TabsTrigger value="register">Register</TabsTrigger>
+              </TabsList>
             </div>
             
-            {mode === "signup" && (
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Choose a username"
-                  required
-                  disabled={loading}
-                  minLength={3}
-                  maxLength={30}
-                />
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                disabled={loading}
-                minLength={6}
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading
-                ? "Processing..."
-                : mode === "signin"
-                ? "Sign In"
-                : "Sign Up"}
-            </Button>
-            <div className="text-sm text-center">
-              {mode === "signin" ? (
-                <>
-                  Don't have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setMode("signup")}
-                    className="text-gamedev-primary hover:underline"
-                    disabled={loading}
-                  >
-                    Sign Up
-                  </button>
-                </>
-              ) : (
-                <>
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setMode("signin")}
-                    className="text-gamedev-primary hover:underline"
-                    disabled={loading}
-                  >
-                    Sign In
-                  </button>
-                </>
-              )}
-            </div>
+            <CardContent>
+              <TabsContent value="login">
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                    <FormField
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="your@email.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? 'Signing in...' : 'Sign In'}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+              
+              <TabsContent value="register">
+                <Form {...registerForm}>
+                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                    <FormField
+                      control={registerForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Username</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Choose a username" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="your@email.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? 'Creating Account...' : 'Create Account'}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+            </CardContent>
+          </Tabs>
+          
+          <CardFooter className="flex justify-center">
+            <p className="text-sm text-gamedev-muted">
+              {activeTab === 'login' 
+                ? "Don't have an account? " 
+                : "Already have an account? "}
+              <Button 
+                variant="link" 
+                className="p-0 h-auto text-gamedev-primary" 
+                onClick={() => setActiveTab(activeTab === 'login' ? 'register' : 'login')}
+              >
+                {activeTab === 'login' ? 'Register' : 'Sign in'}
+              </Button>
+            </p>
           </CardFooter>
-        </form>
-      </Card>
-    </div>
+        </Card>
+      </div>
+    </Layout>
   );
 };
 

@@ -9,6 +9,8 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import PostDetail from "./pages/PostDetail";
 import AdminPanel from "./pages/AdminPanel";
+import QnaPage from "./pages/QnaPage";
+import RoadmapPage from "./pages/RoadmapPage";
 import { AuthProvider } from "./lib/auth";
 
 const queryClient = new QueryClient();
@@ -25,6 +27,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/post/:postId" element={<PostDetail />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/qna" element={<QnaPage />} />
+            <Route path="/roadmap" element={<RoadmapPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

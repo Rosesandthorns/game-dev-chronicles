@@ -55,6 +55,18 @@ const Header = () => {
                 </Link>
               </li>
               
+              <li>
+                <Link to="/qna" className="text-gamedev-text hover:text-gamedev-primary transition-colors">
+                  QnA
+                </Link>
+              </li>
+              
+              <li>
+                <Link to="/roadmap" className="text-gamedev-text hover:text-gamedev-primary transition-colors">
+                  Roadmap
+                </Link>
+              </li>
+              
               {isAdmin && (
                 <li>
                   <Link to="/admin" className="text-gamedev-text hover:text-gamedev-primary transition-colors">

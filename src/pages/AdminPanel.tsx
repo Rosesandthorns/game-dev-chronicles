@@ -20,18 +20,23 @@ import { CalendarIcon, Edit, Plus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useForm, Controller } from 'react-hook-form';
+import { fetchQuestionsAdmin, answerQuestion, deleteQuestion } from '@/services/qnaService';
+import { updateFundingAmount } from '@/services/roadmapService';
 
 const AdminPanel = () => {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [editingQuestion, setEditingQuestion] = useState<any | null>(null);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [activeTab, setActiveTab] = useState('posts');
+  const [fundingAmount, setFundingAmount] = useState("");
   const navigate = useNavigate();
 
   // Form for creating/editing posts
-  const form = useForm<{
+  const postForm = useForm<{
     title: string;
     excerpt: string;
     content: string;
@@ -49,6 +54,15 @@ const AdminPanel = () => {
       featured: false,
       access_level: 'user',
       publish_at: null
+    }
+  });
+
+  // Form for answering questions
+  const questionForm = useForm<{
+    answer: string;
+  }>({
+    defaultValues: {
+      answer: '',
     }
   });
 
@@ -83,8 +97,11 @@ const AdminPanel = () => {
           return;
         }
         
-        // Load posts
-        await fetchPosts();
+        // Load posts and questions
+        await Promise.all([
+          fetchPosts(),
+          fetchQuestions()
+        ]);
       } catch (error) {
         console.error("Error checking admin role:", error);
         navigate('/');
@@ -101,9 +118,14 @@ const AdminPanel = () => {
     setPosts(postsData);
   };
   
-  const handleEdit = (post: Post) => {
+  const fetchQuestions = async () => {
+    const questionsData = await fetchQuestionsAdmin();
+    setQuestions(questionsData);
+  };
+  
+  const handleEditPost = (post: Post) => {
     setEditingPost(post);
-    form.reset({
+    postForm.reset({
       title: post.title,
       excerpt: post.excerpt,
       content: post.content,
@@ -116,7 +138,7 @@ const AdminPanel = () => {
     setActiveTab('editor');
   };
   
-  const handleDelete = async (postId: string) => {
+  const handleDeletePost = async (postId: string) => {
     if (!window.confirm("Are you sure you want to delete this post?")) {
       return;
     }
@@ -142,9 +164,9 @@ const AdminPanel = () => {
     }
   };
   
-  const handleCreateNew = () => {
+  const handleCreateNewPost = () => {
     setEditingPost(null);
-    form.reset({
+    postForm.reset({
       title: '',
       excerpt: '',
       content: '',
@@ -157,7 +179,7 @@ const AdminPanel = () => {
     setActiveTab('editor');
   };
   
-  const onSubmit = async (data: any) => {
+  const onSubmitPost = async (data: any) => {
     try {
       const postData = {
         ...data,
@@ -208,6 +230,96 @@ const AdminPanel = () => {
     }
   };
   
+  // Handle answering questions
+  const handleAnswerQuestion = (question: any) => {
+    setEditingQuestion(question);
+    questionForm.reset({
+      answer: question.answer || '',
+    });
+    setActiveTab('answer-question');
+  };
+  
+  const onSubmitQuestionAnswer = async (data: { answer: string }) => {
+    if (!editingQuestion) return;
+    
+    try {
+      const { success, error } = await answerQuestion(editingQuestion.id, data.answer);
+      
+      if (success) {
+        toast.success("Answer submitted", {
+          description: "Your answer has been published."
+        });
+        await fetchQuestions();
+        setEditingQuestion(null);
+        setActiveTab('questions');
+      } else {
+        toast.error("Failed to submit answer", {
+          description: error?.toString() || "Please try again later."
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting answer:", error);
+      toast.error("Failed to submit answer", {
+        description: "Please try again later."
+      });
+    }
+  };
+  
+  const handleDeleteQuestion = async (questionId: string) => {
+    if (!window.confirm("Are you sure you want to delete this question?")) {
+      return;
+    }
+    
+    try {
+      const { success, error } = await deleteQuestion(questionId);
+      
+      if (success) {
+        toast.success("Question deleted", {
+          description: "The question has been permanently removed."
+        });
+        await fetchQuestions();
+      } else {
+        toast.error("Failed to delete question", {
+          description: error?.toString() || "Please try again later."
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting question:", error);
+      toast.error("Failed to delete question", {
+        description: "Please try again later."
+      });
+    }
+  };
+  
+  // Handle roadmap funding updates
+  const handleUpdateFunding = async () => {
+    const amount = parseFloat(fundingAmount);
+    if (isNaN(amount)) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    
+    try {
+      const { success, error } = await updateFundingAmount(amount);
+      
+      if (success) {
+        toast.success("Funding updated", {
+          description: "Roadmap funding amount has been updated."
+        });
+        setFundingAmount("");
+      } else {
+        toast.error("Failed to update funding", {
+          description: error?.toString() || "Please try again later."
+        });
+      }
+    } catch (error) {
+      console.error("Error updating funding:", error);
+      toast.error("Failed to update funding", {
+        description: "Please try again later."
+      });
+    }
+  };
+  
   if (loading) {
     return (
       <Layout requireAuth>
@@ -229,7 +341,7 @@ const AdminPanel = () => {
       <div className="container py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gamedev-primary">Admin Panel</h1>
-          <Button onClick={handleCreateNew}>
+          <Button onClick={handleCreateNewPost}>
             <Plus className="mr-2 h-4 w-4" /> New Post
           </Button>
         </div>
@@ -238,6 +350,9 @@ const AdminPanel = () => {
           <TabsList className="mb-6">
             <TabsTrigger value="posts">Manage Posts</TabsTrigger>
             <TabsTrigger value="editor">Post Editor</TabsTrigger>
+            <TabsTrigger value="questions">Q&A Management</TabsTrigger>
+            <TabsTrigger value="answer-question">Answer Question</TabsTrigger>
+            <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
           </TabsList>
           
           <TabsContent value="posts">
@@ -297,7 +412,7 @@ const AdminPanel = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleEdit(post)}
+                            onClick={() => handleEditPost(post)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -305,7 +420,7 @@ const AdminPanel = () => {
                             variant="ghost"
                             size="icon"
                             className="text-red-500 hover:text-red-400"
-                            onClick={() => handleDelete(post.id)}
+                            onClick={() => handleDeletePost(post.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -332,11 +447,11 @@ const AdminPanel = () => {
                 {editingPost ? 'Edit Post' : 'Create New Post'}
               </h2>
               
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <Form {...postForm}>
+                <form onSubmit={postForm.handleSubmit(onSubmitPost)} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
-                      control={form.control}
+                      control={postForm.control}
                       name="title"
                       render={({ field }) => (
                         <FormItem>
@@ -349,7 +464,7 @@ const AdminPanel = () => {
                     />
                     
                     <FormField
-                      control={form.control}
+                      control={postForm.control}
                       name="category"
                       render={({ field }) => (
                         <FormItem>
@@ -375,7 +490,7 @@ const AdminPanel = () => {
                     />
                     
                     <FormField
-                      control={form.control}
+                      control={postForm.control}
                       name="image"
                       render={({ field }) => (
                         <FormItem>
@@ -388,7 +503,7 @@ const AdminPanel = () => {
                     />
                     
                     <FormField
-                      control={form.control}
+                      control={postForm.control}
                       name="access_level"
                       render={({ field }) => (
                         <FormItem>
@@ -415,7 +530,7 @@ const AdminPanel = () => {
                   </div>
                   
                   <FormField
-                    control={form.control}
+                    control={postForm.control}
                     name="excerpt"
                     render={({ field }) => (
                       <FormItem>
@@ -432,7 +547,7 @@ const AdminPanel = () => {
                   />
                   
                   <FormField
-                    control={form.control}
+                    control={postForm.control}
                     name="content"
                     render={({ field }) => (
                       <FormItem>
@@ -450,7 +565,7 @@ const AdminPanel = () => {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
-                      control={form.control}
+                      control={postForm.control}
                       name="featured"
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border border-gray-700 p-4">
@@ -471,7 +586,7 @@ const AdminPanel = () => {
                     />
                     
                     <FormField
-                      control={form.control}
+                      control={postForm.control}
                       name="publish_at"
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
@@ -533,6 +648,175 @@ const AdminPanel = () => {
                   </div>
                 </form>
               </Form>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="questions">
+            <div className="bg-black rounded-md shadow border border-gray-800">
+              <Table dark>
+                <TableHeader dark>
+                  <TableRow dark>
+                    <TableHead dark>User</TableHead>
+                    <TableHead dark>Question</TableHead>
+                    <TableHead dark>Status</TableHead>
+                    <TableHead dark>Date</TableHead>
+                    <TableHead dark className="w-36">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody dark>
+                  {questions.map(question => (
+                    <TableRow dark key={question.id}>
+                      <TableCell dark className="font-medium">
+                        {question.profiles?.username || 'Anonymous'}
+                      </TableCell>
+                      <TableCell dark>
+                        <div className="truncate max-w-[300px]" title={question.question}>
+                          {question.question}
+                        </div>
+                      </TableCell>
+                      <TableCell dark>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          question.answer ? 'bg-green-800 text-green-100' : 'bg-yellow-800 text-yellow-100'
+                        }`}>
+                          {question.answer ? 'Answered' : 'Pending'}
+                        </span>
+                      </TableCell>
+                      <TableCell dark>
+                        {new Date(question.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell dark>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleAnswerQuestion(question)}
+                          >
+                            {question.answer ? 'Edit Answer' : 'Answer'}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-400"
+                            onClick={() => handleDeleteQuestion(question.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  
+                  {questions.length === 0 && (
+                    <TableRow dark>
+                      <TableCell dark colSpan={5} className="text-center py-8">
+                        No questions found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="answer-question">
+            <div className="bg-black rounded-md shadow p-6 border border-gray-800">
+              <h2 className="text-xl font-bold mb-6 text-white">
+                {editingQuestion?.answer ? 'Edit Answer' : 'Answer Question'}
+              </h2>
+              
+              {editingQuestion && (
+                <Form {...questionForm}>
+                  <form onSubmit={questionForm.handleSubmit(onSubmitQuestionAnswer)} className="space-y-6">
+                    <div className="bg-gray-900 p-4 rounded-md mb-4">
+                      <p className="text-sm text-gray-400">
+                        Question from {editingQuestion.profiles?.username || 'Anonymous'} - {new Date(editingQuestion.created_at).toLocaleDateString()}:
+                      </p>
+                      <p className="text-white mt-2">{editingQuestion.question}</p>
+                    </div>
+                    
+                    <FormField
+                      control={questionForm.control}
+                      name="answer"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Your Answer</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Type your answer here..." 
+                              className="h-64"
+                              {...field} 
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex justify-end gap-3 pt-4">
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        onClick={() => {
+                          setEditingQuestion(null);
+                          setActiveTab('questions');
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit">
+                        Submit Answer
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              )}
+              
+              {!editingQuestion && (
+                <div className="text-center py-8 text-gray-400">
+                  No question selected. Please select a question to answer.
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="roadmap">
+            <div className="bg-black rounded-md shadow p-6 border border-gray-800">
+              <h2 className="text-xl font-bold mb-6 text-white">
+                Update Roadmap Progress
+              </h2>
+              
+              <div className="max-w-md mx-auto">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-white mb-2">Current Funding Amount (USD)</label>
+                    <div className="flex gap-2">
+                      <Input 
+                        type="number" 
+                        placeholder="Enter amount (e.g. 5000)" 
+                        value={fundingAmount}
+                        onChange={(e) => setFundingAmount(e.target.value)}
+                      />
+                      <Button onClick={handleUpdateFunding}>Update</Button>
+                    </div>
+                    <p className="text-sm text-gray-400 mt-2">
+                      This will update the progress bar on the roadmap page
+                    </p>
+                  </div>
+                  
+                  <div className="pt-4">
+                    <h3 className="text-lg font-medium text-white mb-2">Funding Milestones</h3>
+                    <ul className="space-y-2 text-gray-300">
+                      <li>$1,500 - Early Beta / Proof of Concept</li>
+                      <li>$3,000 - Complete Soundtrack for Free</li>
+                      <li>$5,000 - Behind the Scenes Videos</li>
+                      <li>$7,500 - Guarantee of Project Completion</li>
+                      <li>$10,000 - Project Completion</li>
+                      <li>$12,500 - Steam Port, More Holos, Maps, and Content</li>
+                      <li>$15,000 - More Content and Merchandise</li>
+                      <li>$20,000 - Full Voice Acting</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
