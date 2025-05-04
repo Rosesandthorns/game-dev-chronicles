@@ -1,13 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/sonner';
+import { getFundingAmount, updateFundingAmount } from '@/services/roadmapService';
 
 // Define milestone types
 type Milestone = {
@@ -101,29 +101,16 @@ const RoadmapPage = () => {
   
   const fetchCurrentFunding = async () => {
     try {
-      const { data, error } = await supabase
-        .from('roadmap')
-        .select('current_funding')
-        .single();
-      
-      if (error) {
-        // Table or row might not exist yet, initialize if admin
-        if (isAdmin) {
-          await supabase
-            .from('roadmap')
-            .insert({ id: 1, current_funding: 0 });
-          setCurrentFunding(0);
-        }
-        return;
+      const { success, amount } = await getFundingAmount();
+      if (success) {
+        setCurrentFunding(amount);
       }
-      
-      setCurrentFunding(data.current_funding);
     } catch (error) {
       console.error("Error fetching funding:", error);
     }
   };
   
-  const updateFunding = async () => {
+  const handleUpdateFunding = async () => {
     if (!isAdmin) return;
     
     const amount = parseFloat(editAmount);
@@ -133,16 +120,15 @@ const RoadmapPage = () => {
     }
     
     try {
-      const { error } = await supabase
-        .from('roadmap')
-        .update({ current_funding: amount })
-        .eq('id', 1);
+      const { success } = await updateFundingAmount(amount);
       
-      if (error) throw error;
-      
-      setCurrentFunding(amount);
-      setEditMode(false);
-      toast.success("Funding amount updated successfully");
+      if (success) {
+        setCurrentFunding(amount);
+        setEditMode(false);
+        toast.success("Funding amount updated successfully");
+      } else {
+        toast.error("Failed to update funding amount");
+      }
     } catch (error) {
       console.error("Error updating funding:", error);
       toast.error("Failed to update funding amount");
@@ -177,7 +163,7 @@ const RoadmapPage = () => {
                     className="w-32"
                     placeholder="Amount"
                   />
-                  <Button onClick={updateFunding} size="sm">Save</Button>
+                  <Button onClick={handleUpdateFunding} size="sm">Save</Button>
                   <Button variant="outline" onClick={() => setEditMode(false)} size="sm">Cancel</Button>
                 </div>
               ) : (

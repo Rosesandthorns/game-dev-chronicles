@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/sonner';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -121,10 +121,10 @@ const QnaPage = () => {
       
       if (error) throw error;
       
-      setUserProfile(data);
+      setUserProfile(data as UserProfile);
       
       // Check if user can ask questions
-      checkQuestionEligibility(data);
+      checkQuestionEligibility(data as UserProfile);
     } catch (error) {
       console.error('Error fetching user profile:', error);
     }

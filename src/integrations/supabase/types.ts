@@ -121,6 +121,9 @@ export type Database = {
           full_name: string | null
           id: number
           is_admin: boolean
+          last_question_date: string | null
+          patreon_tier: string | null
+          questions_asked: number | null
           role: string | null
           user_id: string | null
           username: string | null
@@ -132,6 +135,9 @@ export type Database = {
           full_name?: string | null
           id?: number
           is_admin?: boolean
+          last_question_date?: string | null
+          patreon_tier?: string | null
+          questions_asked?: number | null
           role?: string | null
           user_id?: string | null
           username?: string | null
@@ -143,9 +149,57 @@ export type Database = {
           full_name?: string | null
           id?: number
           is_admin?: boolean
+          last_question_date?: string | null
+          patreon_tier?: string | null
+          questions_asked?: number | null
           role?: string | null
           user_id?: string | null
           username?: string | null
+        }
+        Relationships: []
+      }
+      qna_questions: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          created_at: string
+          id: string
+          question: string
+          user_id: string
+          user_tier: string | null
+        }
+        Insert: {
+          answer?: string | null
+          answered_at?: string | null
+          created_at?: string
+          id?: string
+          question: string
+          user_id: string
+          user_tier?: string | null
+        }
+        Update: {
+          answer?: string | null
+          answered_at?: string | null
+          created_at?: string
+          id?: string
+          question?: string
+          user_id?: string
+          user_tier?: string | null
+        }
+        Relationships: []
+      }
+      roadmap: {
+        Row: {
+          current_funding: number
+          id: number
+        }
+        Insert: {
+          current_funding?: number
+          id: number
+        }
+        Update: {
+          current_funding?: number
+          id?: number
         }
         Relationships: []
       }
