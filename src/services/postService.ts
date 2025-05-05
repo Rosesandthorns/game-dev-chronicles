@@ -75,8 +75,8 @@ export async function createPost(post: Omit<Post, 'id' | 'date'>): Promise<{ suc
     return { success: false, error: "Post must include title and content" };
   }
 
-  // Convert UserRole to string to ensure database compatibility
-  const accessLevel = post.access_level || 'user';
+  // Cast the access_level to string to ensure database compatibility
+  const accessLevel = post.access_level ? String(post.access_level) : 'user';
   
   const { data, error } = await supabase
     .from('posts')
@@ -120,7 +120,7 @@ export async function updatePost(id: string, post: Partial<Post>): Promise<{ suc
   if (post.category) updateData.category = post.category;
   if (post.image !== undefined) updateData.image = post.image;
   if (post.featured !== undefined) updateData.featured = post.featured;
-  if (post.access_level) updateData.access_level = post.access_level;
+  if (post.access_level) updateData.access_level = String(post.access_level);
   if (post.publish_at !== undefined) updateData.publish_at = post.publish_at;
   
   if (post.author) {

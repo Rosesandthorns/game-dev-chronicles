@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
@@ -52,6 +51,7 @@ const AdminPanel = () => {
       content: '',
       category: 'announcement',
       featured: false,
+      image: '',
       access_level: 'user',
       publish_at: null
     }
@@ -380,7 +380,7 @@ const AdminPanel = () => {
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           post.access_level === 'admin' 
                             ? 'bg-red-800 text-red-100' 
-                            : post.access_level === 'patreon_premium'
+                            : post.access_level === 'patreon_supporter' || post.access_level === 'patreon_founder'
                             ? 'bg-purple-800 text-purple-100'
                             : post.access_level === 'patreon_basic'
                             ? 'bg-blue-800 text-blue-100'
