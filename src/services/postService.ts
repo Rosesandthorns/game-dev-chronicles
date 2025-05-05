@@ -75,8 +75,8 @@ export async function createPost(post: Omit<Post, 'id' | 'date'>): Promise<{ suc
     return { success: false, error: "Post must include title and content" };
   }
 
-  // Cast the access_level to string to ensure database compatibility
-  const accessLevel = post.access_level ? String(post.access_level) : 'user';
+  // Map our UserRole to the database enum values
+  const accessLevel = mapUserRoleToDatabaseRole(post.access_level || 'user');
   
   const { data, error } = await supabase
     .from('posts')
@@ -120,7 +120,7 @@ export async function updatePost(id: string, post: Partial<Post>): Promise<{ suc
   if (post.category) updateData.category = post.category;
   if (post.image !== undefined) updateData.image = post.image;
   if (post.featured !== undefined) updateData.featured = post.featured;
-  if (post.access_level) updateData.access_level = String(post.access_level);
+  if (post.access_level) updateData.access_level = mapUserRoleToDatabaseRole(post.access_level);
   if (post.publish_at !== undefined) updateData.publish_at = post.publish_at;
   
   if (post.author) {
@@ -162,6 +162,21 @@ export async function deletePost(id: string): Promise<{ success: boolean; error?
   return { success: true };
 }
 
+// Helper function to map our UserRole to the database enum values
+function mapUserRoleToDatabaseRole(role: UserRole): 'user' | 'admin' | 'patreon_basic' | 'patreon_premium' {
+  switch (role) {
+    case 'admin':
+      return 'admin';
+    case 'patreon_basic':
+      return 'patreon_basic';
+    case 'patreon_supporter':
+    case 'patreon_founder':
+      return 'patreon_premium'; // Map both supporter and founder to premium
+    default:
+      return 'user';
+  }
+}
+
 // Helper function to transform database posts to our Post type
 function transformPostData(post: any): Post {
   return {
@@ -178,7 +193,21 @@ function transformPostData(post: any): Post {
     category: post.category as PostCategory,
     image: post.image,
     featured: post.featured,
-    access_level: post.access_level as UserRole || 'user',
+    access_level: mapDatabaseRoleToUserRole(post.access_level),
     publish_at: post.publish_at
   };
+}
+
+// Helper function to map database role to our UserRole
+function mapDatabaseRoleToUserRole(dbRole: 'user' | 'admin' | 'patreon_basic' | 'patreon_premium'): UserRole {
+  switch (dbRole) {
+    case 'admin':
+      return 'admin';
+    case 'patreon_basic':
+      return 'patreon_basic';
+    case 'patreon_premium':
+      return 'patreon_supporter'; // Map premium to supporter by default
+    default:
+      return 'user';
+  }
 }
