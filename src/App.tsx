@@ -12,6 +12,19 @@ import { Toaster } from '@/components/ui/sonner';
 import ProfilePage from '@/pages/ProfilePage';
 import { AuthProvider } from '@/lib/auth';
 
+// Add a redirect component to handle OAuth redirects
+const PatreonRedirect = () => {
+  // This component acts as a redirect handler for Patreon OAuth
+  React.useEffect(() => {
+    // Redirect to profile page with the URL parameters preserved
+    window.location.href = `/profile${window.location.search}`;
+  }, []);
+  
+  return <div className="min-h-screen bg-gamedev-bg text-gamedev-text flex justify-center items-center">
+    Connecting to Patreon...
+  </div>;
+};
+
 function App() {
   return (
     <div className="min-h-screen bg-gamedev-bg text-gamedev-text">
@@ -25,6 +38,7 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/api/patreon/connect" element={<PatreonRedirect />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

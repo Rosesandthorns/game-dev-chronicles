@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.195.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.21.0";
 
@@ -21,13 +22,16 @@ serve(async (req) => {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
     const redirect_url = url.searchParams.get("redirect_url");
+    // Get the auth token from query parameters if not in headers
+    const authTokenFromQuery = url.searchParams.get("auth_token");
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Step 1: If we don't have a code, redirect to Patreon auth page
     if (!code) {
+      // Store the auth token in the redirect URL to retrieve it later
       const redirectUri = `${url.origin}${url.pathname}?redirect_url=${encodeURIComponent(
         redirect_url || url.origin
-      )}`;
+      )}&auth_token=${authTokenFromQuery || ""}`;
 
       const patreonAuthUrl = new URL("https://www.patreon.com/oauth2/authorize");
       patreonAuthUrl.searchParams.append("client_id", PATREON_CLIENT_ID);
@@ -55,7 +59,7 @@ serve(async (req) => {
         client_secret: PATREON_CLIENT_SECRET,
         redirect_uri: `${url.origin}${url.pathname}?redirect_url=${encodeURIComponent(
           redirect_url || url.origin
-        )}`,
+        )}&auth_token=${authTokenFromQuery || ""}`,
       }),
     });
 
@@ -155,16 +159,32 @@ serve(async (req) => {
     }
 
     // Step 6: Get the current user from Supabase
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header provided");
+    // Try to get the auth token from query parameters if not provided in headers
+    let token = authTokenFromQuery || "";
+    
+    // If no token is available, redirect to an error page
+    if (!token) {
+      console.error("No authorization token provided");
+      return new Response(JSON.stringify({ 
+        error: "Missing authentication token. Please try connecting again." 
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
     if (userError || !user) {
-      throw new Error("Failed to get user: " + (userError?.message || "User not found"));
+      console.error("Failed to get user:", userError?.message || "User not found");
+      // Redirect to login page with error
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          Location: `${redirect_url || url.origin}/auth?error=auth_error&message=${encodeURIComponent("Authentication failed. Please login and try again.")}`,
+        },
+      });
     }
 
     // Step 7: Update user profile with Patreon information
@@ -194,13 +214,35 @@ serve(async (req) => {
   } catch (error) {
     console.error("Patreon OAuth Error:", error);
     
+    const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+    
+    // Return a more user-friendly error page
     return new Response(
-      JSON.stringify({ 
-        error: error.message || "An unexpected error occurred during Patreon authentication" 
-      }), 
+      `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Patreon Connection Error</title>
+        <style>
+          body { font-family: Arial, sans-serif; background: #121212; color: white; text-align: center; padding: 50px; }
+          .container { max-width: 600px; margin: 0 auto; background: #1a1a1a; padding: 30px; border-radius: 8px; }
+          .error { color: #ff5555; margin: 20px 0; }
+          .button { background: #626AF1; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Patreon Connection Failed</h1>
+          <p class="error">${errorMessage}</p>
+          <p>There was an issue connecting your Patreon account. Please try again.</p>
+          <a href="/" class="button">Return to Home</a>
+        </div>
+      </body>
+      </html>
+      `,
       {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "text/html" },
       }
     );
   }

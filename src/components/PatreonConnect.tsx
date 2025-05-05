@@ -6,68 +6,113 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/lib/auth";
 import { toast } from "@/components/ui/sonner";
 import { checkPatreonConnection, connectPatreon, disconnectPatreon } from '@/services/patreonService';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const PatreonConnect = () => {
   const [patreonStatus, setPatreonStatus] = useState<{
     connected: boolean;
     tier: string | null;
     loading: boolean;
+    error: string | null;
   }>({
     connected: false,
     tier: null,
     loading: true,
+    error: null
   });
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    // Check for error parameters in the URL (from OAuth redirect)
+    const error = searchParams.get('error');
+    const errorMessage = searchParams.get('message');
+    
+    if (error) {
+      toast.error(errorMessage || 'An error occurred during Patreon connection');
+      // Remove the error from URL to prevent showing the error again on refresh
+      navigate('/profile', { replace: true });
+    }
+    
     fetchPatreonStatus();
-  }, [user]);
+  }, [user, searchParams, navigate]);
 
   const fetchPatreonStatus = async () => {
     if (!user) {
-      setPatreonStatus({ connected: false, tier: null, loading: false });
+      setPatreonStatus({ 
+        connected: false, 
+        tier: null, 
+        loading: false,
+        error: null 
+      });
       return;
     }
 
     try {
-      const { connected, tier } = await checkPatreonConnection();
-      setPatreonStatus({ connected, tier, loading: false });
+      const { connected, tier, error } = await checkPatreonConnection();
+      setPatreonStatus({ 
+        connected, 
+        tier, 
+        loading: false, 
+        error: error ? String(error) : null 
+      });
+      
+      if (error) {
+        toast.error(`Error checking Patreon status: ${error}`);
+      }
     } catch (error) {
       console.error("Error fetching Patreon status:", error);
-      setPatreonStatus({ connected: false, tier: null, loading: false });
+      setPatreonStatus({ 
+        connected: false, 
+        tier: null, 
+        loading: false,
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+      toast.error('Failed to check Patreon connection status');
     }
   };
 
-  const handleConnectPatreon = () => {
+  const handleConnectPatreon = async () => {
     if (!user) {
       toast.error("You must be signed in to connect your Patreon account");
       return;
     }
-    connectPatreon();
+    
+    try {
+      await connectPatreon();
+    } catch (error) {
+      console.error("Error connecting to Patreon:", error);
+      toast.error(error instanceof Error ? error.message : 'Failed to connect to Patreon');
+    }
   };
 
   const handleDisconnectPatreon = async () => {
     try {
-      setPatreonStatus(prev => ({ ...prev, loading: true }));
+      setPatreonStatus(prev => ({ ...prev, loading: true, error: null }));
       const { success, error } = await disconnectPatreon();
       
       if (success) {
         toast.success("Successfully disconnected Patreon account");
-        setPatreonStatus({ connected: false, tier: null, loading: false });
+        setPatreonStatus({ connected: false, tier: null, loading: false, error: null });
       } else {
         toast.error(error || "Failed to disconnect Patreon account");
-        setPatreonStatus(prev => ({ ...prev, loading: false }));
+        setPatreonStatus(prev => ({ ...prev, loading: false, error }));
       }
     } catch (error) {
       console.error("Error disconnecting Patreon:", error);
       toast.error("An error occurred while disconnecting your Patreon account");
-      setPatreonStatus(prev => ({ ...prev, loading: false }));
+      setPatreonStatus(prev => ({ 
+        ...prev, 
+        loading: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }));
     }
   };
 
   const renderTierBenefits = () => {
     switch (patreonStatus.tier) {
-      case 'founder':
+      case 'patreon_founder':
         return (
           <div className="text-sm text-purple-300">
             <p className="font-bold text-lg text-purple-200 mb-2">🎭 Founder Tier</p>
@@ -80,7 +125,7 @@ const PatreonConnect = () => {
             </ul>
           </div>
         );
-      case 'supporter':
+      case 'patreon_supporter':
         return (
           <div className="text-sm text-blue-300">
             <p className="font-bold text-lg text-blue-200 mb-2">🛠 Supporter Tier</p>
@@ -92,7 +137,7 @@ const PatreonConnect = () => {
             <p className="mt-2">Upgrade to Founder tier for more exclusive benefits!</p>
           </div>
         );
-      case 'basic':
+      case 'patreon_basic':
         return (
           <div className="text-sm text-green-300">
             <p className="font-bold text-lg text-green-200 mb-2">🔎 Basic Tier</p>
@@ -143,6 +188,20 @@ const PatreonConnect = () => {
       <CardContent>
         {patreonStatus.loading ? (
           <div className="text-center py-4">Loading...</div>
+        ) : patreonStatus.error ? (
+          <Alert className="bg-red-900/30 border-red-700 mb-4">
+            <AlertDescription className="text-red-300">
+              {patreonStatus.error}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2 bg-transparent border-red-700 hover:bg-red-800/20"
+                onClick={fetchPatreonStatus}
+              >
+                Try Again
+              </Button>
+            </AlertDescription>
+          </Alert>
         ) : patreonStatus.connected ? (
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
@@ -150,9 +209,9 @@ const PatreonConnect = () => {
               <span>
                 Connected to Patreon as a{' '}
                 <span className="font-bold text-purple-400">
-                  {patreonStatus.tier === 'founder' ? 'Founder' :
-                   patreonStatus.tier === 'supporter' ? 'Supporter' :
-                   patreonStatus.tier === 'basic' ? 'Basic' : 'Member'}
+                  {patreonStatus.tier === 'patreon_founder' ? 'Founder' :
+                   patreonStatus.tier === 'patreon_supporter' ? 'Supporter' :
+                   patreonStatus.tier === 'patreon_basic' ? 'Basic' : 'Member'}
                 </span>
               </span>
             </div>
