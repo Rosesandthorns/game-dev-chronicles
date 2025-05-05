@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Post, PostCategory } from "@/lib/types";
+import { Post, PostCategory, UserRole } from "@/lib/types";
 
 export async function getFeaturedPosts(): Promise<Post[]> {
   const { data, error } = await supabase
@@ -74,10 +74,13 @@ export async function createPost(post: Omit<Post, 'id' | 'date'>): Promise<{ suc
   if (!post || !post.title || !post.content) {
     return { success: false, error: "Post must include title and content" };
   }
+
+  // Convert UserRole to string to ensure database compatibility
+  const accessLevel = post.access_level || 'user';
   
   const { data, error } = await supabase
     .from('posts')
-    .insert([{
+    .insert({
       title: post.title,
       excerpt: post.excerpt,
       content: post.content,
@@ -87,9 +90,9 @@ export async function createPost(post: Omit<Post, 'id' | 'date'>): Promise<{ suc
       category: post.category,
       image: post.image,
       featured: post.featured,
-      access_level: post.access_level || 'user',
+      access_level: accessLevel,
       publish_at: post.publish_at
-    }])
+    })
     .select()
     .single();
   
@@ -175,7 +178,7 @@ function transformPostData(post: any): Post {
     category: post.category as PostCategory,
     image: post.image,
     featured: post.featured,
-    access_level: post.access_level || 'user',
+    access_level: post.access_level as UserRole || 'user',
     publish_at: post.publish_at
   };
 }

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getPostById } from '@/services/postService';
@@ -165,7 +164,7 @@ const PostDetail = () => {
               <span className={`text-sm font-medium px-2 py-0.5 rounded ${
                 post.access_level === 'admin' 
                   ? 'bg-red-100 text-red-800' 
-                  : post.access_level === 'patreon_premium'
+                  : post.access_level === 'patreon_supporter' || post.access_level === 'patreon_founder'
                   ? 'bg-purple-100 text-purple-800'
                   : 'bg-blue-100 text-blue-800'
               }`}>

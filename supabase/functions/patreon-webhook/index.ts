@@ -119,11 +119,11 @@ async function handlePledgeCreate(supabase: any, payload: any) {
     // Convert priority levels to tier names
     if (highestTier) {
       if (highestTier.priority === 3) {
-        tierLevel = "founder";
+        tierLevel = "patreon_founder";
       } else if (highestTier.priority === 2) {
-        tierLevel = "supporter";
+        tierLevel = "patreon_supporter";
       } else if (highestTier.priority === 1) {
-        tierLevel = "basic";
+        tierLevel = "patreon_basic";
       }
     }
   }

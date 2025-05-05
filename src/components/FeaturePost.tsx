@@ -36,7 +36,7 @@ const FeaturePost: React.FC<FeaturePostProps> = ({ post }) => {
               <span className={`text-xs font-medium px-2 py-0.5 rounded ${
                 post.access_level === 'admin' 
                   ? 'bg-red-100 text-red-800' 
-                  : post.access_level === 'patreon_premium'
+                  : post.access_level === 'patreon_supporter' || post.access_level === 'patreon_founder'
                   ? 'bg-purple-100 text-purple-800'
                   : 'bg-blue-100 text-blue-800'
               }`}>

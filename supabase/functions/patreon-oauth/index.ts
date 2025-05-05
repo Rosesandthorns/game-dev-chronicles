@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.195.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.21.0";
 
@@ -146,11 +145,11 @@ serve(async (req) => {
       // Convert priority levels to tier names
       if (highestTier) {
         if (highestTier.priority === 3) {
-          tierLevel = "founder";
+          tierLevel = "patreon_founder";
         } else if (highestTier.priority === 2) {
-          tierLevel = "supporter";
+          tierLevel = "patreon_supporter";
         } else if (highestTier.priority === 1) {
-          tierLevel = "basic";
+          tierLevel = "patreon_basic";
         }
       }
     }
