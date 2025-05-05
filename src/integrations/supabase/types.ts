@@ -122,7 +122,11 @@ export type Database = {
           id: number
           is_admin: boolean
           last_question_date: string | null
+          patreon_connected: boolean | null
+          patreon_id: string | null
+          patreon_refresh_token: string | null
           patreon_tier: string | null
+          patreon_token: string | null
           questions_asked: number | null
           role: string | null
           user_id: string | null
@@ -136,7 +140,11 @@ export type Database = {
           id?: number
           is_admin?: boolean
           last_question_date?: string | null
+          patreon_connected?: boolean | null
+          patreon_id?: string | null
+          patreon_refresh_token?: string | null
           patreon_tier?: string | null
+          patreon_token?: string | null
           questions_asked?: number | null
           role?: string | null
           user_id?: string | null
@@ -150,7 +158,11 @@ export type Database = {
           id?: number
           is_admin?: boolean
           last_question_date?: string | null
+          patreon_connected?: boolean | null
+          patreon_id?: string | null
+          patreon_refresh_token?: string | null
           patreon_tier?: string | null
+          patreon_token?: string | null
           questions_asked?: number | null
           role?: string | null
           user_id?: string | null
