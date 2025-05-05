@@ -106,25 +106,52 @@ serve(async (req) => {
     const memberData = await memberResponse.json();
     const tiers = memberData?.included || [];
     
-    // Determine tier level (basic or premium)
+    // Determine tier level based on tier names and prices
     let tierLevel = null;
     
     if (tiers.length > 0) {
-      // Get highest tier (assuming higher tier = higher benefits)
+      // Map tier names to our tier structure
       const highestTier = tiers.reduce((highest: any, tier: any) => {
         const tierPrice = tier.attributes?.amount_cents || 0;
+        const tierTitle = tier.attributes?.title || "";
         const highestPrice = highest?.attributes?.amount_cents || 0;
         
-        return tierPrice > highestPrice ? tier : highest;
+        // Log tier details for debugging
+        console.log(`Found tier: ${tierTitle}, price: ${tierPrice} cents`);
+        
+        // Assign specific tier based on either name or price
+        const titleLower = tierTitle.toLowerCase();
+        
+        // Check if the tier name contains specific keywords
+        if (titleLower.includes("founder")) {
+          return { ...tier, priority: 3 };
+        } else if (titleLower.includes("supporter")) {
+          return highest?.priority === 3 ? highest : { ...tier, priority: 2 };
+        } else if (titleLower.includes("basic")) {
+          return highest?.priority >= 2 ? highest : { ...tier, priority: 1 };
+        }
+        
+        // If no specific name match, fall back to price-based logic
+        if (tierPrice >= 2000) { // $20 or more - Founder
+          return highest?.priority === 3 ? highest : { ...tier, priority: 3 };
+        } else if (tierPrice >= 1000) { // $10 or more - Supporter
+          return highest?.priority === 3 ? highest : { ...tier, priority: 2 };
+        } else if (tierPrice > 0) { // Any paid tier - Basic
+          return highest?.priority >= 2 ? highest : { ...tier, priority: 1 };
+        }
+        
+        return highest || { ...tier, priority: 0 };
       }, null);
       
-      // Determine tier level based on price (example logic)
-      // Assuming tiers: less than $10 = basic, $10 or more = premium
-      const tierPrice = highestTier?.attributes?.amount_cents || 0;
-      if (tierPrice >= 1000) { // $10 or more
-        tierLevel = "premium";
-      } else if (tierPrice > 0) { // Any paid tier below $10
-        tierLevel = "basic";
+      // Convert priority levels to tier names
+      if (highestTier) {
+        if (highestTier.priority === 3) {
+          tierLevel = "founder";
+        } else if (highestTier.priority === 2) {
+          tierLevel = "supporter";
+        } else if (highestTier.priority === 1) {
+          tierLevel = "basic";
+        }
       }
     }
 

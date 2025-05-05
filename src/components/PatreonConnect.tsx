@@ -65,6 +65,53 @@ const PatreonConnect = () => {
     }
   };
 
+  const renderTierBenefits = () => {
+    switch (patreonStatus.tier) {
+      case 'founder':
+        return (
+          <div className="text-sm text-purple-300">
+            <p className="font-bold text-lg text-purple-200 mb-2">🎭 Founder Tier</p>
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Access to large amounts of behind the scene content (updated weekly)</li>
+              <li>Access to a detailed roadmap (updated daily)</li>
+              <li>Ask the devs Q&A biweekly</li>
+              <li>Special role on Discord for additional behind the scenes content</li>
+              <li>Weekly Holo & Animatronic full data reveal</li>
+            </ul>
+          </div>
+        );
+      case 'supporter':
+        return (
+          <div className="text-sm text-blue-300">
+            <p className="font-bold text-lg text-blue-200 mb-2">🛠 Supporter Tier</p>
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Access to behind the scenes content (updated weekly)</li>
+              <li>Ask the devs Q&A biweekly</li>
+              <li>Support the development of Mirage Park</li>
+            </ul>
+            <p className="mt-2">Upgrade to Founder tier for more exclusive benefits!</p>
+          </div>
+        );
+      case 'basic':
+        return (
+          <div className="text-sm text-green-300">
+            <p className="font-bold text-lg text-green-200 mb-2">🔎 Basic Tier</p>
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Access to behind the scenes content (updated weekly)</li>
+              <li>Support the development of Mirage Park</li>
+            </ul>
+            <p className="mt-2">Upgrade to higher tiers for more exclusive benefits!</p>
+          </div>
+        );
+      default:
+        return (
+          <div className="text-sm text-gray-400">
+            <p>Your Patreon connection is active but no tier benefits were found.</p>
+          </div>
+        );
+    }
+  };
+
   if (!user) {
     return (
       <Card className="bg-black border-gray-800 text-white">
@@ -103,36 +150,14 @@ const PatreonConnect = () => {
               <span>
                 Connected to Patreon as a{' '}
                 <span className="font-bold text-purple-400">
-                  {patreonStatus.tier === 'premium' ? 'Premium' : 'Basic'} Member
+                  {patreonStatus.tier === 'founder' ? 'Founder' :
+                   patreonStatus.tier === 'supporter' ? 'Supporter' :
+                   patreonStatus.tier === 'basic' ? 'Basic' : 'Member'}
                 </span>
               </span>
             </div>
             
-            {patreonStatus.tier === 'premium' ? (
-              <div className="text-sm text-purple-300">
-                As a Premium member, you have access to:
-                <ul className="list-disc list-inside mt-2">
-                  <li>Q&A sessions with developers</li>
-                  <li>Early access to game updates</li>
-                  <li>Exclusive in-game items</li>
-                </ul>
-              </div>
-            ) : patreonStatus.tier === 'basic' ? (
-              <div className="text-sm text-blue-300">
-                As a Basic member, you have access to:
-                <ul className="list-disc list-inside mt-2">
-                  <li>Early access to game updates</li>
-                  <li>Special community events</li>
-                </ul>
-                <p className="mt-2">
-                  Upgrade to Premium on Patreon for more features!
-                </p>
-              </div>
-            ) : (
-              <div className="text-sm text-gray-400">
-                Your Patreon connection is active but no tier benefits were found.
-              </div>
-            )}
+            {renderTierBenefits()}
             
             <div className="flex justify-between pt-4">
               <Button
@@ -143,7 +168,7 @@ const PatreonConnect = () => {
                 Disconnect Patreon
               </Button>
               <Button asChild>
-                <a href="https://www.patreon.com/miragepark" target="_blank" rel="noopener noreferrer">
+                <a href="https://www.patreon.com/c/arcticroses" target="_blank" rel="noopener noreferrer">
                   Visit Patreon Page
                 </a>
               </Button>
@@ -156,21 +181,32 @@ const PatreonConnect = () => {
               membership tier:
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+            <div className="grid grid-cols-1 gap-4 my-4">
+              <div className="border border-green-800 p-4 rounded-md">
+                <h3 className="font-bold text-green-400 mb-2">🔎 Basic Tier</h3>
+                <ul className="text-sm list-disc list-inside space-y-1">
+                  <li>Access to behind the scenes content (updated weekly)</li>
+                  <li>Support the development of Mirage Park</li>
+                </ul>
+              </div>
+              
               <div className="border border-blue-800 p-4 rounded-md">
-                <h3 className="font-bold text-blue-400 mb-2">Basic Tier</h3>
-                <ul className="text-sm list-disc list-inside">
-                  <li>Early access to game updates</li>
-                  <li>Special community events</li>
+                <h3 className="font-bold text-blue-400 mb-2">🛠 Supporter Tier</h3>
+                <ul className="text-sm list-disc list-inside space-y-1">
+                  <li>Access to behind the scenes content (updated weekly)</li>
+                  <li>Ask the devs Q&A biweekly</li>
+                  <li>Support the development of Mirage Park</li>
                 </ul>
               </div>
               
               <div className="border border-purple-800 p-4 rounded-md">
-                <h3 className="font-bold text-purple-400 mb-2">Premium Tier</h3>
-                <ul className="text-sm list-disc list-inside">
-                  <li>Q&A sessions with developers</li>
-                  <li>Early access to game updates</li>
-                  <li>Exclusive in-game items</li>
+                <h3 className="font-bold text-purple-400 mb-2">🎭 Founder Tier</h3>
+                <ul className="text-sm list-disc list-inside space-y-1">
+                  <li>Access to large amounts of behind the scene content (updated weekly)</li>
+                  <li>Access to a detailed roadmap (updated daily)</li>
+                  <li>Ask the devs Q&A biweekly</li>
+                  <li>Special role on Discord for additional content</li>
+                  <li>Weekly Holo & Animatronic full data reveal</li>
                 </ul>
               </div>
             </div>

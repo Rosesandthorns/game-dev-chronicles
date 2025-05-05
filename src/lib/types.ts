@@ -1,6 +1,6 @@
 
 export type PostCategory = 'gameplay' | 'art' | 'technical' | 'announcement';
-export type UserRole = 'user' | 'admin' | 'patreon_basic' | 'patreon_premium';
+export type UserRole = 'user' | 'admin' | 'patreon_basic' | 'patreon_supporter' | 'patreon_founder';
 
 export interface Post {
   id: string;

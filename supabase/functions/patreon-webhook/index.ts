@@ -74,19 +74,57 @@ async function handlePledgeCreate(supabase: any, payload: any) {
   
   // Determine tier level based on entitled tiers
   let tierLevel = null;
+  
   if (tierData && tierData.length > 0) {
-    // Simple logic: if user has any tier, set as basic
-    tierLevel = "basic";
+    // Get tier details to determine tier level
+    const tierIds = tierData.map((tier: any) => tier.id);
     
-    // Check for premium tier (tier ID that corresponds to premium)
-    // You'd need to replace this with your actual premium tier ID from Patreon
-    const premiumTierIds = ["12345", "67890"]; // Example tier IDs
-    const hasPremiumTier = tierData.some((tier: any) => 
-      premiumTierIds.includes(tier.id)
-    );
+    // Fetch tier details from Patreon API
+    const tierLookup = payload.included?.filter((item: any) => 
+      item.type === 'tier' && tierIds.includes(item.id)
+    ) || [];
     
-    if (hasPremiumTier) {
-      tierLevel = "premium";
+    // Process tier data to determine appropriate tier level
+    const highestTier = tierLookup.reduce((highest: any, tier: any) => {
+      const tierPrice = tier.attributes?.amount_cents || 0;
+      const tierTitle = tier.attributes?.title || "";
+      
+      // Log tier details for debugging
+      console.log(`Processing tier: ${tierTitle}, price: ${tierPrice} cents`);
+      
+      // Assign specific tier based on either name or price
+      const titleLower = tierTitle.toLowerCase();
+      
+      // Check if the tier name contains specific keywords
+      if (titleLower.includes("founder")) {
+        return { ...tier, priority: 3 };
+      } else if (titleLower.includes("supporter")) {
+        return highest?.priority === 3 ? highest : { ...tier, priority: 2 };
+      } else if (titleLower.includes("basic")) {
+        return highest?.priority >= 2 ? highest : { ...tier, priority: 1 };
+      }
+      
+      // If no specific name match, fall back to price-based logic
+      if (tierPrice >= 2000) { // $20 or more - Founder
+        return highest?.priority === 3 ? highest : { ...tier, priority: 3 };
+      } else if (tierPrice >= 1000) { // $10 or more - Supporter
+        return highest?.priority === 3 ? highest : { ...tier, priority: 2 };
+      } else if (tierPrice > 0) { // Any paid tier - Basic
+        return highest?.priority >= 2 ? highest : { ...tier, priority: 1 };
+      }
+      
+      return highest || { ...tier, priority: 0 };
+    }, null);
+    
+    // Convert priority levels to tier names
+    if (highestTier) {
+      if (highestTier.priority === 3) {
+        tierLevel = "founder";
+      } else if (highestTier.priority === 2) {
+        tierLevel = "supporter";
+      } else if (highestTier.priority === 1) {
+        tierLevel = "basic";
+      }
     }
   }
   
